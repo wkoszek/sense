@@ -58,6 +58,66 @@ Four modules, one executable:
   Developer ID so grants survive rebuilds.
 - Keep macOS 15 as the floor; guard newer APIs with `@available`.
 
+## Releasing — always bump the version
+
+`sense` is distributed as a **notarized universal binary** through the Homebrew
+tap `wkoszek/homebrew-tap`. Users get it with:
+
+```sh
+brew install wkoszek/tap/sense
+```
+
+**Rule: every release gets a new version number. Never re-cut an existing one.**
+A published tarball's sha256 is baked into the formula; re-releasing the same
+version silently breaks `brew install` for anyone who already has it cached, and
+Homebrew will not re-download a version it thinks it has. `make release`
+enforces this — it refuses to build a version that is already tagged locally or
+on the remote — but the rule applies to anything done by hand too.
+
+The version lives in exactly one place: `senseVersion` in
+`Sources/SenseCore/Version.swift`. `sense --version`, `sense vision --version`
+and `sense audio version` all read it. Do not hard-code a version anywhere else.
+
+Every release also needs a `## vX.Y.Z` section in `CHANGELOG.md` **written
+before** the release runs — `make release` reads that section as the GitHub
+release body and aborts if it is missing. Notes are part of the release, not an
+afterthought.
+
+```sh
+make release BUMP=patch     # 0.1.0 -> 0.1.1  (fixes only)
+make release BUMP=minor     # 0.1.0 -> 0.2.0  (new commands or flags)
+make release BUMP=major     # 0.1.0 -> 1.0.0  (breaking CLI changes)
+make release VERSION=0.4.0  # explicit
+make release                # asks which
+DRY_RUN=1 make release BUMP=patch   # build+sign+notarize, publish nothing
+```
+
+Semver against the **CLI surface**, not the internals: a renamed flag or a
+changed exit code is breaking; a new subcommand is minor; anything users cannot
+observe is a patch.
+
+After a release, bump the formula in the tap (`make formula` prints it with the
+new url and sha256 filled in).
+
+### Signing and notarization
+
+Two separate things, and only one of them is about Gatekeeper:
+
+- **Developer ID signing is load-bearing.** TCC keys camera/mic/screen grants to
+  the code signature. An ad-hoc signature changes its cdhash on every build, so
+  an ad-hoc release would re-prompt users for permissions after every upgrade.
+  This is why we ship a prebuilt binary rather than letting Homebrew compile it.
+- **Notarization is hygiene.** Homebrew does not quarantine what it downloads,
+  so a brew install works either way — but anyone who downloads the tarball from
+  the GitHub release page in a browser *does* get it quarantined, and without
+  notarization Gatekeeper blocks it.
+
+Release signing uses `--options runtime --timestamp` (a real secure timestamp).
+Do **not** copy `make build`'s `--timestamp=none` into the release path;
+notarization rejects it. A standalone Mach-O cannot be stapled — only bundles,
+dmgs and pkgs can — so the notarization ticket is checked online. That is
+expected, not a bug.
+
 ## Build / test
 
 ```sh

@@ -8,3 +8,6 @@ _tmp/
 *.caf
 *.m4a
 *.mp3
+
+# release artifacts
+sense-*-macos-universal.tar.gz
