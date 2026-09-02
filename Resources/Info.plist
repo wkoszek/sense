@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>CFBundleIdentifier</key>
+    <string>com.koszek.sense</string>
+    <key>CFBundleName</key>
+    <string>sense</string>
+    <key>NSMicrophoneUsageDescription</key>
+    <string>sense records from the microphone for `sense audio record`, `sense audio transcribe`, and `sense audio devices --test`.</string>
+    <key>NSSpeechRecognitionUsageDescription</key>
+    <string>sense transcribes speech on-device for `sense audio transcribe`.</string>
+    <key>NSCameraUsageDescription</key>
+    <string>sense reads from the camera for `sense vision capture`.</string>
+</dict>
+</plist>

@@ -1,0 +1,43 @@
+name: sense
+kind: cli
+description: >
+  sense — local, on-device perception CLI for macOS. One Swift binary over
+  Apple's frameworks with two halves: `sense vision` (OCR with
+  searchable-PDF/hOCR/Markdown output, face/body/hand/pose/barcode/rectangle/
+  horizon/saliency detection, classification, document scanning, subject
+  segmentation, perceptual similarity and dedupe, camera and screen capture,
+  video frame ops, CoreImage transforms and filters) and `sense audio`
+  (microphone recording, on-device speech-to-text, text-to-speech, playback,
+  inspection, convert/trim/split/gain). Nothing leaves the machine.
+visibility: public
+language: swift
+license: MIT
+tags:
+  - cli
+  - macos
+  - swift
+  - ocr
+  - vision-framework
+  - coreimage
+  - speech
+  - avfoundation
+  - text-to-speech
+  - transcription
+  - screenshot
+  - camera
+  - on-device
+notes: |
+  Merge of the former `vision` and `audio` projects (both archived in favour of
+  this one). Same Unix conventions across both halves: stdout=data,
+  stderr=status, `-` for stdin, format from extension, --json everywhere, exit
+  0/1/2/3/4.
+
+  Four modules, one executable: SenseCLI (root command), SenseCore (version +
+  TCC disclaim), SenseVision, SenseAudio. The vision module cannot be named
+  `Vision` — it clashes with the framework on a case-insensitive filesystem.
+  Vision parses with swift-argument-parser; audio hand-rolls its flags and gets
+  handed the raw argument tail.
+
+  Requires macOS 15. Resources/Info.plist is embedded into __TEXT,__info_plist
+  on the executable target and `make build` signs with a Developer ID, both
+  required so mic/speech/camera/screen TCC grants work and survive rebuilds.

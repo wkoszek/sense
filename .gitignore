@@ -1,0 +1,10 @@
+.build/
+_tmp/
+*.xcodeproj
+.swiftpm/
+.impeccable/
+.DS_Store
+*.wav
+*.caf
+*.m4a
+*.mp3

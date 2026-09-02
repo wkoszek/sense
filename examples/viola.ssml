@@ -1,0 +1,10 @@
+<speak>
+  <prosody rate="95%">Hello,</prosody>
+  <break time="300ms"/>
+  how are you, <phoneme alphabet="ipa" ph="viˈoʊlə">Viola</phoneme>?
+  <break time="500ms"/>
+  We're <prosody rate="90%" pitch="+5%">thinking about ya</prosody>.
+  <break time="400ms"/>
+  We hope you'll <prosody pitch="+10%">come and visit</prosody>.
+  <break time="600ms"/>
+</speak>
