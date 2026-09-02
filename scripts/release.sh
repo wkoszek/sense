@@ -72,6 +72,8 @@ if [ -n "${VERSION:-}" ]; then
   NEW=$VERSION
 elif [ -n "${BUMP:-}" ]; then
   NEW=$(bump "$CURRENT" "$BUMP")
+elif [ ! -r /dev/tty ]; then
+  die "no tty to ask on. Pass BUMP=patch|minor|major or VERSION=x.y.z."
 else
   echo "    current is $CURRENT. What should this release be?"
   echo "      1) patch -> $(bump "$CURRENT" patch)   fixes only"
@@ -200,9 +202,15 @@ if [ "$DRY_RUN" = 1 ]; then
 fi
 
 step "Publishing $TAG"
-printf '    this creates a public release at github.com/%s. continue? [y/N] ' "$GITHUB_REPO"
-read -r ok </dev/tty
-[ "$ok" = y ] || [ "$ok" = Y ] || die "aborted by user; $VERSION_FILE left modified"
+if [ "${YES:-0}" = 1 ]; then
+  note "YES=1 — publishing without prompting"
+elif [ -r /dev/tty ]; then
+  printf '    this creates a public release at github.com/%s. continue? [y/N] ' "$GITHUB_REPO"
+  read -r ok </dev/tty
+  [ "$ok" = y ] || [ "$ok" = Y ] || die "aborted by user; $VERSION_FILE left modified"
+else
+  die "no tty to confirm on. Re-run with YES=1 to publish non-interactively."
+fi
 
 git add "$VERSION_FILE" "$CHANGELOG"
 git commit -m "release: $TAG"

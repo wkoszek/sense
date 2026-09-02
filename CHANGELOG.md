@@ -3,10 +3,14 @@
 Every release needs a section here **before** it is cut — `make release` reads
 it as the GitHub release body and refuses to run without one.
 
-## v0.1.0 — 2026-09-02
+## v2.0.0 — 2026-09-02
 
-First release. `sense` is one binary covering both halves of local, on-device
-perception on macOS:
+First release of `sense`, and a major version because it supersedes two 1.x-era
+tools rather than starting from nothing: `vision` and `audio` are now one
+binary, and their command surface moved. Anyone upgrading from those has a
+breaking change to absorb, so the number says so.
+
+`sense` covers both halves of local, on-device perception on macOS:
 
 ```sh
 brew install wkoszek/tap/sense
