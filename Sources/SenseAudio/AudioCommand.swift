@@ -11,6 +11,7 @@ func printUsage() {
       record       record from the microphone (stdout WAV stream or -o file)
       transcribe   speech-to-text: live mic, file, or stdin  [Speech.framework]
       talk, say    text-to-speech, best installed voice      [AVSpeechSynthesizer]
+      voices       list voices; --install gets the premium ones (free, much better)
 
     playback & inspection:
       play         play a file or stdin
@@ -42,6 +43,7 @@ public func runAudio(_ argv: [String]) -> Never {
     case "transcribe", "stt": cmdTranscribe(rest)
     case "play": cmdPlay(rest)
     case "talk", "say", "tts": cmdTalk(rest)
+    case "voices": cmdVoices(rest)
     case "devices": cmdDevices(rest)
     case "info": cmdInfo(rest)
     case "convert": cmdConvert(rest)

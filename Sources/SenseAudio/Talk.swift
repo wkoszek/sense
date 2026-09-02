@@ -19,10 +19,10 @@ private func talkUsage() -> Never {
           --ssml                          treat input as raw SSML (<speak>...</speak>);
                                           .ssml/.xml files imply this
           --dump-ssml                     print the generated SSML instead of speaking
-      -l, --list-voices                   list installed voices (best quality first)
+      -l, --list-voices                   list installed voices (see `sense audio voices`)
 
-    Premium/Enhanced voices are downloaded in:
-      System Settings > Accessibility > Spoken Content > System Voice > Manage Voices...
+    Premium voices sound dramatically better and are a free download:
+      sense audio voices --install
     """)
     exit(2)
 }
@@ -41,38 +41,9 @@ private struct TalkOpts {
 }
 
 // MARK: - Voices
-
-private func qualityRank(_ q: AVSpeechSynthesisVoiceQuality) -> Int {
-    switch q {
-    case .premium: return 3
-    case .enhanced: return 2
-    default: return 1
-    }
-}
-
-private func qualityName(_ q: AVSpeechSynthesisVoiceQuality) -> String {
-    switch q {
-    case .premium: return "premium"
-    case .enhanced: return "enhanced"
-    default: return "default"
-    }
-}
-
-private func sortedVoices() -> [AVSpeechSynthesisVoice] {
-    AVSpeechSynthesisVoice.speechVoices().sorted {
-        let (qa, qb) = (qualityRank($0.quality), qualityRank($1.quality))
-        if qa != qb { return qa > qb }
-        if $0.language != $1.language { return $0.language < $1.language }
-        return $0.name < $1.name
-    }
-}
-
-private func listVoices() {
-    for v in sortedVoices() {
-        let personal = v.voiceTraits.contains(.isPersonalVoice) ? " personal" : ""
-        print("\(v.name.padding(toLength: 22, withPad: " ", startingAt: 0)) \(v.language.padding(toLength: 7, withPad: " ", startingAt: 0)) \(qualityName(v.quality).padding(toLength: 9, withPad: " ", startingAt: 0))\(personal)  \(v.identifier)")
-    }
-}
+//
+// Enumeration, quality ranking and the premium hint live in Voices.swift so
+// `sense audio voices` and `talk` agree on what a good voice is.
 
 private func pickVoice(_ spec: String?) -> AVSpeechSynthesisVoice {
     let voices = sortedVoices()
@@ -94,7 +65,7 @@ private func pickVoice(_ spec: String?) -> AVSpeechSynthesisVoice {
     if let v = voices.first(where: { $0.language.lowercased() == s }) { return v }
     if let v = voices.first(where: { $0.language.lowercased().hasPrefix(s) }) { return v }
     if let v = voices.first(where: { $0.identifier.lowercased().contains(s) }) { return v }
-    fail("voice not found: \(spec) (try `sense audio talk -l`)")
+    fail("voice not found: \(spec) (try `sense audio voices`)")
 }
 
 // MARK: - Synthesis
@@ -198,7 +169,7 @@ func cmdTalk(_ args: [String]) {
         }
     }
 
-    if o.listVoices { listVoices(); return }
+    if o.listVoices { cmdVoices([]); return }
 
     var text = o.text.joined(separator: " ")
     if let f = o.file {
@@ -218,6 +189,12 @@ func cmdTalk(_ args: [String]) {
     if o.dumpSSML { print(o.ssml ? text : Markdown.toSSML(text)); return }
 
     let voice = pickVoice(o.voice)
+    // The moment someone notices the audio sounds mediocre is the moment to
+    // mention that better voices are one command away — but only when we fell
+    // back to a default voice on our own, not when they asked for one.
+    if o.voice == nil, qualityRank(voice.quality) < 3 {
+        premiumHintIfNeeded(language: voice.language)
+    }
     let u = makeUtterance(text, o, voice)
     if let out = o.output {
         render(u, to: out)

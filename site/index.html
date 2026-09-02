@@ -1,0 +1,523 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>sense — local perception CLI for macOS</title>
+<meta name="description" content="One on-device CLI for macOS: sense vision for pixels, sense audio for sound. OCR, detection, segmentation, transcription, speech — no network, no cloud, ever.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23000'/%3E%3Ccircle cx='32' cy='32' r='14' fill='%230a84ff'/%3E%3C/svg%3E">
+<style>
+  :root {
+    --bg: #000000;
+    --panel: #101014;
+    --card: #121216;
+    --line: rgba(255, 255, 255, 0.09);
+    --text: #f5f5f7;
+    --muted: #86868b;
+    --blue: #0071e3;
+    --blue-bright: #2997ff;
+    --mono: ui-monospace, "SF Mono", SFMono-Regular, Menlo, monospace;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Helvetica, Arial, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+    line-height: 1.5;
+  }
+  a { color: var(--blue-bright); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  a:focus-visible, button:focus-visible {
+    outline: 2px solid var(--blue-bright);
+    outline-offset: 3px;
+    border-radius: 4px;
+  }
+
+  .wrap { max-width: 980px; margin: 0 auto; padding: 0 22px; }
+
+  /* ---- nav ---- */
+  nav {
+    position: sticky; top: 0; z-index: 10;
+    background: rgba(0, 0, 0, 0.72);
+    -webkit-backdrop-filter: saturate(180%) blur(20px);
+    backdrop-filter: saturate(180%) blur(20px);
+    border-bottom: 1px solid var(--line);
+  }
+  .nav-inner {
+    max-width: 980px; margin: 0 auto; padding: 0 22px;
+    height: 48px; display: flex; align-items: center; gap: 28px;
+    font-size: 13px;
+  }
+  .nav-inner .brand { color: var(--text); font-weight: 600; font-family: var(--mono); font-size: 14px; }
+  .nav-inner a { color: var(--muted); }
+  .nav-inner a:hover { color: var(--text); text-decoration: none; }
+  .nav-inner .spacer { flex: 1; }
+
+  /* ---- hero ---- */
+  header {
+    position: relative;
+    padding: 110px 0 96px;
+    text-align: center;
+    overflow: hidden;
+  }
+  .glow {
+    position: absolute; left: 50%; top: 58%;
+    width: 900px; height: 560px;
+    transform: translate(-50%, -50%);
+    background: radial-gradient(closest-side, rgba(10, 132, 255, 0.22), transparent 70%);
+    pointer-events: none;
+  }
+  .eyebrow {
+    font-size: 14px; font-weight: 600; letter-spacing: 0.02em;
+    color: var(--muted); margin-bottom: 14px;
+  }
+  h1 {
+    font-size: clamp(44px, 8vw, 76px);
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    line-height: 1.05;
+  }
+  h1 .grad {
+    background: linear-gradient(90deg, #2997ff, #0a84ff);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+  .sub {
+    margin: 20px auto 44px;
+    max-width: 560px;
+    font-size: clamp(17px, 2.4vw, 21px);
+    color: var(--muted);
+  }
+
+  /* ---- terminal window ---- */
+  .terminal {
+    position: relative;
+    max-width: 640px;
+    margin: 0 auto;
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    box-shadow: 0 24px 60px rgba(0, 0, 0, 0.6);
+    text-align: left;
+  }
+  .titlebar {
+    display: flex; align-items: center; gap: 8px;
+    padding: 12px 14px;
+    border-bottom: 1px solid var(--line);
+  }
+  .dot { width: 12px; height: 12px; border-radius: 50%; }
+  .dot.r { background: #ff5f57; } .dot.y { background: #febc2e; } .dot.g { background: #28c840; }
+  .titlebar .title {
+    flex: 1; text-align: center;
+    font-size: 12px; color: var(--muted); font-family: var(--mono);
+    margin-right: 52px; /* balance the dots */
+  }
+  .termbody {
+    display: flex; align-items: center; gap: 16px;
+    padding: 26px 22px;
+  }
+  .termbody code {
+    flex: 1;
+    min-width: 0;
+    font-family: var(--mono);
+    font-size: clamp(14px, 2.6vw, 17px);
+    color: var(--text);
+    overflow-x: auto;
+    white-space: nowrap;
+  }
+  .termbody code .prompt { color: var(--blue-bright); user-select: none; }
+
+  .copy {
+    flex-shrink: 0;
+    appearance: none; border: 0; cursor: pointer;
+    background: var(--blue); color: #fff;
+    font: 600 14px/1 -apple-system, BlinkMacSystemFont, sans-serif;
+    padding: 10px 18px;
+    border-radius: 980px;
+    transition: background 0.15s ease;
+    min-width: 86px;
+  }
+  .copy:hover { background: #0077ed; }
+  .copy.done { background: #28c840; }
+
+  .hero-links { margin-top: 26px; font-size: 15px; }
+  .hero-links a { margin: 0 14px; }
+  .hero-note { margin-top: 14px; font-size: 13px; color: var(--muted); }
+
+  /* ---- sections ---- */
+  section { padding: 90px 0; border-top: 1px solid var(--line); }
+  h2 {
+    font-size: clamp(30px, 5vw, 44px);
+    font-weight: 700; letter-spacing: -0.015em;
+    text-align: center; line-height: 1.15;
+  }
+  .lede {
+    max-width: 620px; margin: 16px auto 0;
+    text-align: center; color: var(--muted);
+    font-size: 17px;
+  }
+  .lede code { font-family: var(--mono); font-size: 15px; color: var(--text); }
+
+  .facts {
+    display: grid; grid-template-columns: repeat(3, 1fr);
+    gap: 40px; margin-top: 56px; text-align: center;
+  }
+  .facts h3 { font-size: 17px; font-weight: 600; margin-bottom: 6px; }
+  .facts p { font-size: 14px; color: var(--muted); }
+
+  /* ---- example cards ---- */
+  .cards {
+    display: grid; grid-template-columns: repeat(2, 1fr);
+    gap: 14px; margin-top: 48px;
+  }
+  .card {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    padding: 20px 20px 16px;
+    display: flex; flex-direction: column; gap: 12px;
+    min-width: 0; /* let long commands scroll inside instead of widening the grid */
+  }
+  .card h3 { font-size: 15px; font-weight: 600; }
+  .card .cmd {
+    display: flex; align-items: center; gap: 10px;
+    min-width: 0;
+  }
+  .card pre {
+    flex: 1;
+    min-width: 0;
+    font-family: var(--mono);
+    font-size: 12.5px;
+    line-height: 1.6;
+    color: #c7c7cc;
+    white-space: pre-wrap;
+    overflow-wrap: break-word;
+  }
+  .card pre .prompt { color: var(--blue-bright); user-select: none; }
+  .copy.small {
+    padding: 6px 12px; font-size: 12px; min-width: 64px;
+    background: rgba(255, 255, 255, 0.08); color: var(--text);
+  }
+  .copy.small:hover { background: rgba(255, 255, 255, 0.14); }
+  .copy.small.done { background: #28c840; color: #fff; }
+
+  /* ---- install ---- */
+  .install-steps {
+    max-width: 640px; margin: 48px auto 0;
+    display: flex; flex-direction: column; gap: 14px;
+  }
+  .step {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    padding: 20px;
+  }
+  .step h3 { font-size: 15px; font-weight: 600; margin-bottom: 4px; }
+  .step p { font-size: 14px; color: var(--muted); margin-bottom: 12px; }
+  .step .cmd { display: flex; align-items: center; gap: 10px; min-width: 0; }
+  .step pre {
+    flex: 1; min-width: 0; font-family: var(--mono); font-size: 13px; line-height: 1.6;
+    color: #c7c7cc; white-space: pre-wrap; overflow-wrap: break-word;
+  }
+  .step pre .prompt { color: var(--blue-bright); user-select: none; }
+  .step pre .out { color: var(--muted); }
+
+  /* ---- footer ---- */
+  footer {
+    border-top: 1px solid var(--line);
+    padding: 40px 0 60px;
+    font-size: 13px; color: var(--muted);
+    text-align: center;
+  }
+  .foot-links { margin-bottom: 14px; font-size: 14px; }
+  .foot-links a { margin: 0 12px; color: var(--text); }
+  .foot-links a:hover { color: var(--blue-bright); text-decoration: none; }
+
+  pre::-webkit-scrollbar, code::-webkit-scrollbar { height: 4px; }
+  pre::-webkit-scrollbar-thumb, code::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.18); border-radius: 2px;
+  }
+  pre, .termbody code { scrollbar-width: thin; scrollbar-color: rgba(255, 255, 255, 0.18) transparent; }
+
+  @media (max-width: 720px) {
+    .cards { grid-template-columns: 1fr; }
+    .facts { grid-template-columns: 1fr; gap: 28px; }
+    header { padding: 72px 0 64px; }
+    section { padding: 64px 0; }
+    .nav-inner { gap: 18px; }
+    .nav-inner .ghost { display: none; }
+    .termbody { flex-direction: column; align-items: stretch; gap: 16px; }
+    .termbody code { white-space: normal; word-break: break-word; text-align: center; }
+    .termbody .copy { width: 100%; padding: 12px; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto; }
+    * { transition: none !important; }
+  }
+</style>
+</head>
+<body>
+
+<nav aria-label="Site">
+  <div class="nav-inner">
+    <span class="brand">sense</span>
+    <span class="spacer"></span>
+    <a href="#vision">Vision</a>
+    <a href="#audio">Audio</a>
+    <a href="#install">Install</a>
+    <a class="ghost" href="https://github.com/wkoszek/sense">GitHub</a>
+  </div>
+</nav>
+
+<header>
+  <div class="glow" aria-hidden="true"></div>
+  <div class="wrap" style="position: relative;">
+    <p class="eyebrow">A command-line tool for macOS</p>
+    <h1>Your Mac can see and hear.<br><span class="grad">Now your terminal can too.</span></h1>
+    <p class="sub">OCR, detection, segmentation, transcription and speech — powered by Apple frameworks, entirely on device. No network. No cloud. Ever.</p>
+
+    <div class="terminal">
+      <div class="titlebar" aria-hidden="true">
+        <span class="dot r"></span><span class="dot y"></span><span class="dot g"></span>
+        <span class="title">zsh — Terminal</span>
+      </div>
+      <div class="termbody">
+        <code><span class="prompt">$ </span>brew install wkoszek/tap/sense</code>
+        <button class="copy" data-cmd="brew install wkoszek/tap/sense">Copy</button>
+      </div>
+    </div>
+
+    <p class="hero-note">Signed, notarized universal binary · macOS 15 or newer · MIT licensed</p>
+    <p class="hero-links">
+      <a href="https://github.com/wkoszek/sense">View on GitHub</a>
+      <a href="https://x.com/wkoszek">Follow on X</a>
+    </p>
+  </div>
+</header>
+
+<section>
+  <div class="wrap">
+    <h2>One binary. Two senses.</h2>
+    <p class="lede"><code>sense vision</code> for pixels, <code>sense audio</code> for sound. Everything runs locally through Vision, CoreImage, AVFoundation, ScreenCaptureKit, Speech and friends — your files never leave the machine.</p>
+    <div class="facts">
+      <div>
+        <h3>On-device, always</h3>
+        <p>Network use is opt-in only, and only for one flag: <span style="font-family: var(--mono); font-size: 12.5px;">transcribe --allow-network</span>.</p>
+      </div>
+      <div>
+        <h3>Made for pipes</h3>
+        <p>stdout is data, stderr is status. JSON everywhere, deterministic exit codes, stdin with <span style="font-family: var(--mono); font-size: 12.5px;">-</span>.</p>
+      </div>
+      <div>
+        <h3>Trustable builds</h3>
+        <p>Developer ID signed and notarized by Apple, so permission grants survive every upgrade.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="vision">
+  <div class="wrap">
+    <h2>Vision</h2>
+    <p class="lede">Live Text OCR, face and barcode detection, subject cutouts, smart crops, screen capture — the whole Vision framework, one flag away.</p>
+    <div class="cards">
+      <div class="card">
+        <h3>Turn a scanned PDF into Markdown</h3>
+        <div class="cmd">
+          <pre><span class="prompt">$ </span>sense vision ocr scan.pdf --md &gt; notes.md</pre>
+          <button class="copy small" data-cmd="sense vision ocr scan.pdf --md > notes.md">Copy</button>
+        </div>
+      </div>
+      <div class="card">
+        <h3>OCR whatever is on screen right now</h3>
+        <div class="cmd">
+          <pre><span class="prompt">$ </span>sense vision screenshot | sense vision ocr -</pre>
+          <button class="copy small" data-cmd="sense vision screenshot | sense vision ocr -">Copy</button>
+        </div>
+      </div>
+      <div class="card">
+        <h3>Find faces, get pixel coordinates</h3>
+        <div class="cmd">
+          <pre><span class="prompt">$ </span>sense vision detect group.jpg --what faces --json</pre>
+          <button class="copy small" data-cmd="sense vision detect group.jpg --what faces --json">Copy</button>
+        </div>
+      </div>
+      <div class="card">
+        <h3>Read barcodes and QR codes</h3>
+        <div class="cmd">
+          <pre><span class="prompt">$ </span>sense vision detect poster.jpg --what barcodes</pre>
+          <button class="copy small" data-cmd="sense vision detect poster.jpg --what barcodes">Copy</button>
+        </div>
+      </div>
+      <div class="card">
+        <h3>Blur every face in a photo</h3>
+        <div class="cmd">
+          <pre><span class="prompt">$ </span>sense vision filter photo.jpg out.jpg --redact faces --redact-blur</pre>
+          <button class="copy small" data-cmd="sense vision filter photo.jpg out.jpg --redact faces --redact-blur">Copy</button>
+        </div>
+      </div>
+      <div class="card">
+        <h3>Cut out the person, blur the background</h3>
+        <div class="cmd">
+          <pre><span class="prompt">$ </span>sense vision segment photo.jpg --person --blur-bg 25 -o portrait.png</pre>
+          <button class="copy small" data-cmd="sense vision segment photo.jpg --person --blur-bg 25 -o portrait.png">Copy</button>
+        </div>
+      </div>
+      <div class="card">
+        <h3>Find near-duplicate photos</h3>
+        <div class="cmd">
+          <pre><span class="prompt">$ </span>sense vision dedupe ~/Pictures/Export</pre>
+          <button class="copy small" data-cmd="sense vision dedupe ~/Pictures/Export">Copy</button>
+        </div>
+      </div>
+      <div class="card">
+        <h3>Subtitle a screen recording from its pixels</h3>
+        <div class="cmd">
+          <pre><span class="prompt">$ </span>sense vision video ocr recording.mov --changes --srt &gt; captions.srt</pre>
+          <button class="copy small" data-cmd="sense vision video ocr recording.mov --changes --srt > captions.srt">Copy</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="audio">
+  <div class="wrap">
+    <h2>Audio</h2>
+    <p class="lede">Record, transcribe, speak, convert, trim, split — with voice-activity detection and on-device speech recognition.</p>
+    <div class="cards">
+      <div class="card">
+        <h3>Transcribe a recording, on device</h3>
+        <div class="cmd">
+          <pre><span class="prompt">$ </span>sense audio transcribe interview.m4a</pre>
+          <button class="copy small" data-cmd="sense audio transcribe interview.m4a">Copy</button>
+        </div>
+      </div>
+      <div class="card">
+        <h3>Make SRT subtitles from a talk</h3>
+        <div class="cmd">
+          <pre><span class="prompt">$ </span>sense audio transcribe talk.m4a --srt &gt; talk.srt</pre>
+          <button class="copy small" data-cmd="sense audio transcribe talk.m4a --srt > talk.srt">Copy</button>
+        </div>
+      </div>
+      <div class="card">
+        <h3>Record until you stop talking</h3>
+        <div class="cmd">
+          <pre><span class="prompt">$ </span>sense audio record -o note.wav --vad 2</pre>
+          <button class="copy small" data-cmd="sense audio record -o note.wav --vad 2">Copy</button>
+        </div>
+      </div>
+      <div class="card">
+        <h3>Have your Mac announce the build</h3>
+        <div class="cmd">
+          <pre><span class="prompt">$ </span>sense audio talk "The build finished successfully"</pre>
+          <button class="copy small" data-cmd='sense audio talk "The build finished successfully"'>Copy</button>
+        </div>
+      </div>
+      <div class="card">
+        <h3>Turn Markdown notes into an audio file</h3>
+        <div class="cmd">
+          <pre><span class="prompt">$ </span>sense audio talk -f notes.md -o notes.mp3</pre>
+          <button class="copy small" data-cmd="sense audio talk -f notes.md -o notes.mp3">Copy</button>
+        </div>
+      </div>
+      <div class="card">
+        <h3>Normalize levels before publishing</h3>
+        <div class="cmd">
+          <pre><span class="prompt">$ </span>sense audio gain in.wav out.wav --normalize --db -3</pre>
+          <button class="copy small" data-cmd="sense audio gain in.wav out.wav --normalize --db -3">Copy</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <h2>The senses compose.</h2>
+    <p class="lede">Every command reads stdin and writes clean stdout, so vision and audio chain together like any other Unix tool.</p>
+    <div class="cards" style="max-width: 640px; margin-left: auto; margin-right: auto; grid-template-columns: 1fr;">
+      <div class="card">
+        <h3>Read a contract out loud</h3>
+        <div class="cmd">
+          <pre><span class="prompt">$ </span>sense vision ocr contract.pdf --md | sense audio talk -m</pre>
+          <button class="copy small" data-cmd="sense vision ocr contract.pdf --md | sense audio talk -m">Copy</button>
+        </div>
+      </div>
+      <div class="card">
+        <h3>Speak, get text back — no file in between</h3>
+        <div class="cmd">
+          <pre><span class="prompt">$ </span>sense audio record -d 5 | sense audio transcribe -</pre>
+          <button class="copy small" data-cmd="sense audio record -d 5 | sense audio transcribe -">Copy</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="install">
+  <div class="wrap">
+    <h2>Install in one line.</h2>
+    <p class="lede">Homebrew pulls a signed, notarized universal binary for Apple silicon and Intel. Requires macOS 15 (Sequoia) or newer.</p>
+    <div class="install-steps">
+      <div class="step">
+        <h3>Install</h3>
+        <div class="cmd">
+          <pre><span class="prompt">$ </span>brew install wkoszek/tap/sense</pre>
+          <button class="copy small" data-cmd="brew install wkoszek/tap/sense">Copy</button>
+        </div>
+      </div>
+      <div class="step">
+        <h3>Grant permissions once</h3>
+        <p>Camera, microphone and screen recording are tied to the code signature, so a grant you give once keeps working across upgrades.</p>
+        <div class="cmd">
+          <pre><span class="prompt">$ </span>sense vision doctor --request</pre>
+          <button class="copy small" data-cmd="sense vision doctor --request">Copy</button>
+        </div>
+      </div>
+      <div class="step">
+        <h3>Verify what you installed</h3>
+        <p>Every release is signed with the project's Developer ID and notarized by Apple.</p>
+        <div class="cmd">
+          <pre><span class="prompt">$ </span>codesign -dv --verbose=2 "$(brew --prefix)/bin/sense" 2&gt;&amp;1 | grep TeamIdentifier
+<span class="out">TeamIdentifier=QQ5A9Q7C7Z</span></pre>
+          <button class="copy small" data-cmd='codesign -dv --verbose=2 "$(brew --prefix)/bin/sense" 2>&1 | grep TeamIdentifier'>Copy</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <p class="foot-links">
+      <a href="https://github.com/wkoszek/sense">GitHub</a>
+      <a href="https://x.com/wkoszek">X</a>
+      <a href="https://koszek.com">koszek.com</a>
+    </p>
+    <p>© 2026 Wojciech Adam Koszek · MIT License · Built with Apple frameworks, no cloud attached.</p>
+  </div>
+</footer>
+
+<script>
+  document.querySelectorAll(".copy").forEach(function (btn) {
+    btn.addEventListener("click", function () {
+      navigator.clipboard.writeText(btn.dataset.cmd).then(function () {
+        var prev = btn.textContent;
+        btn.textContent = "Copied";
+        btn.classList.add("done");
+        setTimeout(function () {
+          btn.textContent = prev;
+          btn.classList.remove("done");
+        }, 1600);
+      });
+    });
+  });
+</script>
+
+</body>
+</html>

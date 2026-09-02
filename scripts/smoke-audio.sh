@@ -14,6 +14,11 @@ expect() { want=$1; shift; set +e; "$V" audio "$@" >/dev/null 2>&1; got=$?; set 
 run version
 run devices
 run talk -l
+run voices
+run voices --premium
+run voices --lang en --json
+run voices --quiet
+expect 2 voices --bogus
 run talk -o "$T/clip.wav" "the quick brown fox jumps over the lazy dog"
 run info "$T/clip.wav"
 run info "$T/clip.wav" --json

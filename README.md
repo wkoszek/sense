@@ -77,6 +77,9 @@ sense audio transcribe talk.m4a --srt > talk.srt
 sense audio talk "The build finished successfully"
 sense audio talk -o output.m4a "The build finished successfully"
 
+# Get the premium voices — free, and a large quality jump
+sense audio voices --install
+
 # Pipeline OCR text directly to speech
 sense vision ocr contract.pdf --md | sense audio talk -m
 ```
@@ -142,6 +145,7 @@ sense vision classify --model Model.mlpackage img.jpg
 | `trim` | Audio trimming and silence removal |
 | `split` | Audio splitting on silence boundaries |
 | `gain` | Gain adjustment and peak normalization (`--normalize`) |
+| `voices` | List installed TTS voices by quality; `--install` opens the System Settings pane where premium voices are downloaded |
 | `devices` | List audio input/output devices and test microphone levels (`--test`) |
 
 #### Audio Examples
@@ -155,6 +159,9 @@ sense audio record -d 5 | sense audio transcribe -
 sense audio talk -f notes.md -o notes.mp3
 sense audio talk -f msg.ssml -o msg.m4a
 sense audio play out.wav --rate 1.5
+sense audio voices                            # installed voices, best first
+sense audio voices --premium                  # just the good ones
+sense audio voices --install                  # open Settings to download more
 sense audio devices --test
 sense audio info file.mp3 --silences
 sense audio convert in.aiff out.m4a -r 44100 -b 160k
@@ -175,7 +182,17 @@ sense audio gain in.wav out.wav --normalize --db -3
 - Encodes WAV, AIFF, CAF, M4A, AAC, and FLAC natively. MP3 encoding requires `lame` or `ffmpeg` on `PATH`.
 - On-device speech recognition requires installed dictation language models (System Settings > Keyboard > Dictation). Pass `--allow-network` if on-device models are unavailable.
 - Supported SSML tags: `<break>`, `<prosody>`, `<phoneme>`, and `<say-as>`. Tags `<p>`, `<s>`, and `<emphasis>` are rejected due to macOS framework crashes.
-- Premium TTS voices can be managed in System Settings > Accessibility > Spoken Content > Manage Voices.
+- **Premium voices are a free download and sound dramatically better** than the
+  ones macOS ships with. `sense audio talk` picks the best installed voice
+  automatically, so this is the single highest-impact thing to set up:
+
+  ```sh
+  sense audio voices --install     # opens Accessibility > Spoken Content
+  ```
+
+  From there: **System voice > (i) > Manage Voices**, then download any voice
+  marked *Premium* or *Enhanced*. `sense audio voices --premium` shows what you
+  already have; if a language has none, `voices` and `talk` say so.
 
 ### Vision Processing
 - Feature-print distance values range from `0.0` (identical) to `~0.3` (near-duplicate) and `>1.0` (distinct).

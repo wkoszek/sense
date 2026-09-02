@@ -3,6 +3,28 @@
 Every release needs a section here **before** it is cut — `make release` reads
 it as the GitHub release body and refuses to run without one.
 
+## v2.1.0 — 2026-09-02
+
+### Added
+
+- **`sense audio voices`** — list installed text-to-speech voices, best quality
+  first, with `--lang`, `--premium`, `--json` and `--quiet`.
+
+- **`sense audio voices --install`** opens System Settings directly at
+  Accessibility > Spoken Content, where premium voices are downloaded.
+
+  Premium voices are free and sound dramatically better than the ones macOS
+  ships with, but they are buried several levels into System Settings and
+  nothing tells you they exist. Now `voices` prints what you have, and both
+  `voices` and `talk` say so when the language you are speaking has only
+  default-quality voices installed — the hint appears at the moment the audio
+  actually sounds mediocre, and never when you named a voice yourself.
+
+### Changed
+
+- `sense audio talk -l` still works and now delegates to `voices`; voice
+  enumeration and quality ranking moved to one place so the two agree.
+
 ## v2.0.0 — 2026-09-02
 
 First release of `sense`, and a major version because it supersedes two 1.x-era
