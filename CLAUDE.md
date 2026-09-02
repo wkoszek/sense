@@ -58,6 +58,37 @@ Four modules, one executable:
   Developer ID so grants survive rebuilds.
 - Keep macOS 15 as the floor; guard newer APIs with `@available`.
 
+## User-visible changes must land everywhere
+
+**If a change is visible to a user, the docs ship with it — in the same commit,
+not "later".** A new command, a renamed or removed flag, a changed default,
+different output, a new permission prompt, a new requirement: all of it counts.
+Internal refactors that a user cannot observe do not.
+
+The surfaces, in the order they go stale:
+
+| Surface | What lives there | When |
+|---|---|---|
+| `README.md` | install, quickstart, command tables, notes/limits | every user-visible change |
+| `CHANGELOG.md` | the `## vX.Y.Z` section | every release (`make release` enforces) |
+| `Formula/sense.rb` `caveats` in [homebrew-tap](https://github.com/wkoszek/homebrew-tap) | permission prompts, prerequisites | when setup or requirements change |
+| GitHub + Gitea repo description and topics | the one-line blurb | when the scope of the tool changes |
+| [Profile README](https://github.com/wkoszek/wkoszek) | the `sense` bullet | when the one-line pitch changes |
+| `.github/repo.diaml` | `description`, `short_description`, `tags` | keep identical to the live repo topics |
+| Project website | install and feature pages | **none yet — see below** |
+
+There is no `sense` website today; `koszek.com/sense` is a 404. When one exists,
+add it to this table and treat it as non-optional: a released feature nobody can
+read about has not really shipped. Until then, the README is the website.
+
+Two things make this concrete rather than aspirational:
+
+- The README's command tables and the `--help` output describe the same surface.
+  If you add a subcommand or flag, both change, and a reader will diff them.
+- Every command shown in the README should be one you have actually run. They
+  were all verified against `scripts/gen-assets.swift` output when written; keep
+  it that way rather than writing plausible-looking invocations.
+
 ## Releasing — always bump the version
 
 `sense` is distributed as a **notarized universal binary** through the Homebrew

@@ -4,15 +4,49 @@
 
 All processing is executed on-device. The only exceptions are optional network transcription (`sense audio transcribe --allow-network`) and MP3 encoding, which uses `lame` or `ffmpeg` if available on `PATH`.
 
-## Requirements & Building
-
-Requires macOS 15+ and Xcode 16+ (Swift 6 toolchain).
+## Installation
 
 ```sh
-make build    # Build release binary (.build/release/sense) signed with Developer ID
-make install  # Install binary to /usr/local/bin/sense
-make test     # Run vision and audio smoke tests
+brew install wkoszek/tap/sense
 ```
+
+That is the whole thing — it pulls a signed, notarized universal binary
+(Apple silicon and Intel) from the [tap](https://github.com/wkoszek/homebrew-tap).
+To upgrade later, `brew upgrade sense`.
+
+Requires **macOS 15 (Sequoia) or newer**.
+
+<details>
+<summary>Why a prebuilt binary instead of building from source?</summary>
+
+macOS ties camera, microphone and screen-recording permissions to an
+executable's code signature. Released binaries are signed with a Developer ID,
+so a grant you give once keeps working across upgrades. A locally compiled
+binary is only ad-hoc signed and its identity changes on every build, which
+means macOS would ask for those permissions again every time you update.
+
+You can verify what you installed came from this project:
+
+```sh
+codesign -dv --verbose=2 "$(brew --prefix)/bin/sense" 2>&1 | grep TeamIdentifier
+# TeamIdentifier=QQ5A9Q7C7Z
+```
+
+</details>
+
+### Building from source
+
+Requires Xcode 16+ (Swift 6 toolchain) in addition to macOS 15.
+
+```sh
+git clone https://github.com/wkoszek/sense.git && cd sense
+make build    # release binary at .build/release/sense
+make install  # install to /usr/local/bin/sense (PREFIX= to change)
+make test     # vision and audio smoke suites
+```
+
+Note the permission caveat above: a source build re-prompts for camera, mic and
+screen access after each rebuild.
 
 `sense` merges the former `vision` and `audio` tools into a single binary. Commands and flags under `sense vision` and `sense audio` retain their original syntax.
 
