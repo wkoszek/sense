@@ -237,7 +237,9 @@ for i in $(seq 1 30); do
 done
 note "tag is on GitHub"
 
-RELEASE_ID=$(python3 -c "
+# These must be exported, not passed as argv — `python3 -c "..." VAR=x` makes
+# them positional arguments, which os.environ never sees.
+RELEASE_ID=$(TAG="$TAG" NOTES="$NOTES" GITHUB_REPO="$GITHUB_REPO" GITHUB_PAT="$GITHUB_PAT" python3 -c "
 import json,os,urllib.request
 body=json.dumps({'tag_name':os.environ['TAG'],'name':os.environ['TAG'],
                  'body':os.environ['NOTES'],'draft':False,'prerelease':False}).encode()
@@ -246,7 +248,7 @@ r=urllib.request.Request('https://api.github.com/repos/'+os.environ['GITHUB_REPO
     headers={'Authorization':'Bearer '+os.environ['GITHUB_PAT'],
              'Accept':'application/vnd.github+json'})
 print(json.load(urllib.request.urlopen(r))['id'])
-" TAG="$TAG" NOTES="$NOTES" GITHUB_REPO="$GITHUB_REPO" GITHUB_PAT="$GITHUB_PAT")
+")
 note "created release $RELEASE_ID"
 
 curl -sf -X POST \
