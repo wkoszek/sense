@@ -138,4 +138,7 @@ pixels, so metadata is dropped (this doubles as `--strip`). Continuity Camera is
 not enumerated. Image captioning and open-vocabulary object detection are not in
 Apple's frameworks; use `classify --model` with your own CoreML model.
 
+Runnable examples — mostly pipelines that use both senses — are in
+`examples/` (see `examples/README.md`).
+
 Specs: `docs/vision_spec.md`, `docs/audio_spec.md`.
