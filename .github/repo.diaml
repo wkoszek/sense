@@ -12,20 +12,34 @@ description: >
 visibility: public
 language: swift
 license: MIT
+short_description: >
+  On-device vision + audio CLI for macOS. OCR, detection, screen/camera capture,
+  speech-to-text, TTS — one notarized binary, nothing leaves your machine.
+distribution:
+  homebrew: brew install wkoszek/tap/sense
+  tap: https://github.com/wkoszek/homebrew-tap
+# Mirrored verbatim as the GitHub and Gitea repo topics.
 tags:
-  - cli
   - macos
   - swift
+  - cli
+  - command-line-tool
   - ocr
   - vision-framework
   - coreimage
-  - speech
   - avfoundation
+  - speech-to-text
   - text-to-speech
   - transcription
   - screenshot
+  - screen-capture
   - camera
+  - image-processing
+  - audio-processing
   - on-device
+  - privacy
+  - apple-silicon
+  - homebrew
 notes: |
   Merge of the former `vision` and `audio` projects (both archived in favour of
   this one). Same Unix conventions across both halves: stdout=data,
@@ -41,3 +55,8 @@ notes: |
   Requires macOS 15. Resources/Info.plist is embedded into __TEXT,__info_plist
   on the executable target and `make build` signs with a Developer ID, both
   required so mic/speech/camera/screen TCC grants work and survive rebuilds.
+
+  Released as a notarized universal binary via `make release` (see CLAUDE.md);
+  the Homebrew formula installs that prebuilt artifact rather than compiling,
+  because a source build is only ad-hoc signed and TCC grants would not survive
+  an upgrade. Versions are never reused — release.sh enforces it.
