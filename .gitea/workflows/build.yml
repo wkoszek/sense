@@ -1,0 +1,71 @@
+# sense is a macOS-only Swift package: it links Vision, ScreenCaptureKit,
+# Speech and CoreImage, and needs macOS 15 to build at all. The Linux CI
+# container cannot compile it, so this workflow does not try — a green build
+# here would mean nothing. What it can check is the shell: the example scripts
+# and the two smoke suites, which are the parts most likely to rot.
+#
+# Compiling and running the real test suite (`make test`) needs a macOS runner.
+# Until there is one, that stays a local pre-push step.
+name: Build
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+
+jobs:
+  shellcheck:
+    runs-on: ubuntu-latest
+    container:
+      image: tig.koszek.com/wkoszek/coreapp-ci:latest
+      credentials:
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITEA_TOKEN }}
+    steps:
+      - name: Clone repo
+        env:
+          REF: ${{ github.head_ref || github.ref_name }}
+          ACTOR: ${{ github.actor }}
+          TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+        run: |
+          git clone --depth 1 -b "$REF" \
+            "http://$ACTOR:$TOKEN@gitea:3000/$REPO.git" .
+          # Keep the token out of .git/config before running repo code.
+          git remote set-url origin "http://gitea:3000/$REPO.git"
+
+      - name: Shell syntax
+        run: |
+          set -eu
+          fail=0
+          for f in examples/*.sh scripts/*.sh; do
+            [ -e "$f" ] || continue
+            if sh -n "$f"; then echo "  ok  $f"; else echo "FAIL $f"; fail=1; fi
+          done
+          exit $fail
+
+      - name: Scripts are executable
+        run: |
+          set -eu
+          fail=0
+          for f in examples/*.sh scripts/*.sh; do
+            [ -e "$f" ] || continue
+            [ -x "$f" ] || { echo "FAIL not executable: $f"; fail=1; }
+          done
+          [ $fail = 0 ] && echo "  ok  all scripts executable"
+          exit $fail
+
+      - name: Package manifest is present and well-formed
+        run: |
+          set -eu
+          test -f Package.swift
+          grep -q 'name: "sense"' Package.swift
+          for t in SenseCLI SenseCore SenseVision SenseAudio; do
+            grep -q "\"$t\"" Package.swift || { echo "FAIL target $t missing"; exit 1; }
+          done
+          echo "  ok  Package.swift declares all four targets"
