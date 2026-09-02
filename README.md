@@ -154,3 +154,29 @@ sense audio gain in.wav out.wav --normalize --db -3
 - [`docs/vision_spec.md`](docs/vision_spec.md)
 - [`docs/audio_spec.md`](docs/audio_spec.md)
 
+## Author
+
+`sense` is written and maintained by **Wojciech Adam Koszek**
+([@wkoszek](https://github.com/wkoszek), [koszek.com](https://koszek.com)).
+
+Issues and patches are welcome at
+[github.com/wkoszek/sense](https://github.com/wkoszek/sense).
+
+## Copyright & License
+
+Copyright © 2026 Wojciech Adam Koszek.
+
+Released under the **MIT License** — see [`LICENSE`](LICENSE) for the full
+text. In short: do what you like with it, keep the copyright notice, and it
+comes with no warranty.
+
+### Third-party
+
+- [swift-argument-parser](https://github.com/apple/swift-argument-parser)
+  1.8.2 — Apache License 2.0, Copyright © Apple Inc. The only external
+  dependency; everything else is Apple system frameworks.
+
+Released binaries are signed with the Developer ID of Adam Koszek
+(`QQ5A9Q7C7Z`) and notarized by Apple. A binary that does not report that team
+identifier under `codesign -dv` did not come from this project.
+
