@@ -24,6 +24,56 @@ Requires macOS 15+ (Xcode 16+ / Swift 6 toolchain to build).
 `sense` merges the former `vision` and `audio` tools. The commands and flags
 under each are unchanged — old invocations work with `sense ` prefixed.
 
+## Quickstart
+
+The ten things it is most worth having installed for:
+
+1. **Read the text off an image or PDF**
+   ```sh
+   sense vision ocr scan.pdf
+   ```
+2. **Turn a photo of a document into a searchable PDF** — same pixels, plus an
+   invisible text layer Preview and Spotlight can find
+   ```sh
+   sense vision ocr photo.jpg -o photo.pdf
+   ```
+3. **Read what's on your screen** — for the dialog you can't select text from
+   ```sh
+   sense vision screenshot | sense vision ocr -
+   ```
+4. **Decode a QR code or barcode** in a photo or screenshot
+   ```sh
+   sense vision detect poster.jpg --what barcodes
+   ```
+5. **Blur the faces before sharing a photo**
+   ```sh
+   sense vision filter shot.jpg out.jpg --redact faces --redact-blur
+   ```
+6. **Find the near-duplicate photos** in a folder before you back it up
+   ```sh
+   sense vision dedupe ~/Pictures/Export
+   ```
+7. **Transcribe a recording**, on-device
+   ```sh
+   sense audio transcribe interview.m4a
+   ```
+8. **Turn that recording into subtitles**
+   ```sh
+   sense audio transcribe talk.m4a --srt > talk.srt
+   ```
+9. **Say something out loud, or save it as audio**
+   ```sh
+   sense audio talk "the build is done"
+   sense audio talk -o reminder.m4a "the build is done"
+   ```
+10. **Read a document aloud** — both senses in one pipe
+    ```sh
+    sense vision ocr contract.pdf --md | sense audio talk -m
+    ```
+
+Longer recipes live in [`examples/`](examples/) as scripts you can run:
+`read-aloud.sh`, `receipts.sh`, `screen-to-speech.sh`, `voice-note.sh`.
+
 ## Conventions
 
 Both halves follow the same Unix rules:
@@ -58,17 +108,19 @@ commands take `--annotate out.png` to draw results over the input.
 | `aesthetics` | aesthetic score + utility-image flag |
 | `doctor` | permission state, cameras, OCR languages; `--request` triggers prompts |
 
+Beyond the quickstart:
+
 ```sh
-sense vision ocr scan.pdf --md > notes.md
-sense vision ocr photo.jpg -o photo.pdf                      # searchable PDF
-sense vision screenshot | sense vision ocr -                 # screen, as text
+sense vision ocr scan.pdf --md > notes.md          # headings and paragraphs
+sense vision ocr scan.pdf --json --words           # every word, with boxes
 sense vision detect group.jpg --what faces pose --annotate out.png --json
-sense vision scan *.jpg -o doc.pdf --ocr
+sense vision scan *.jpg -o doc.pdf --ocr           # photos -> flat, clean PDF
 sense vision segment me.jpg --person --blur-bg 25 -o portrait.png
-sense vision dedupe ~/Pictures/Export --threshold 0.3
-sense vision filter shot.jpg out.jpg --redact faces --redact-blur
+sense vision crop wide.jpg thumb.jpg --smart 1:1   # keeps the subject
+sense vision screenshot --window Safari -o s.png
 sense vision diff before.png after.png --threshold 0.01 -o diff.png
 sense vision video ocr recording.mov --changes --srt > captions.srt
+sense vision classify --model MyModel.mlpackage img.jpg
 ```
 
 ## `sense audio`
@@ -82,16 +134,17 @@ sense vision video ocr recording.mov --changes --srt > captions.srt
 | `info` | AudioToolbox (`AudioFileGetProperty`) |
 | `convert` `trim` `split` `gain` | AVAudioFile + AVAudioConverter |
 
+Beyond the quickstart:
+
 ```sh
 sense audio record > out.wav                  # mic to stdout (WAV) until Ctrl-C
 sense audio record -o out.m4a -d 10 --level   # 10s to file with live meter
 sense audio record -o note.wav --vad 2        # auto-stop after 2s of silence
 sense audio transcribe                        # live mic -> text
-sense audio transcribe talk.m4a --srt         # file -> subtitles (--vtt/--json)
 sense audio record -d 5 | sense audio transcribe -
-sense audio talk "hello there"                # TTS (alias: sense audio say)
 sense audio talk -f notes.md -o notes.mp3     # Markdown read naturally
 sense audio talk -f msg.ssml -o msg.m4a       # raw SSML; see examples/
+sense audio talk -f notes.md --dump-ssml      # debug the pauses, don't speak
 sense audio play out.wav --rate 1.5
 sense audio devices --test                    # mic level check
 sense audio info file.mp3 --silences
@@ -137,8 +190,5 @@ supported by ImageIO on macOS 15 (use `cwebp`). `convert` re-encodes from
 pixels, so metadata is dropped (this doubles as `--strip`). Continuity Camera is
 not enumerated. Image captioning and open-vocabulary object detection are not in
 Apple's frameworks; use `classify --model` with your own CoreML model.
-
-Runnable examples — mostly pipelines that use both senses — are in
-`examples/` (see `examples/README.md`).
 
 Specs: `docs/vision_spec.md`, `docs/audio_spec.md`.
