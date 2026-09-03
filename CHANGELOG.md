@@ -3,6 +3,28 @@
 Every release needs a section here **before** it is cut — `make release` reads
 it as the GitHub release body and refuses to run without one.
 
+## v3.2.0 — 2026-09-02
+
+### Added
+
+- **`sense audio samples -n <count>`** and **`--all`** — put more than the
+  default two voices on one page. `-n 10` is a good tour; `--all` takes every
+  speech voice for the language (13 for en-US).
+
+### Changed
+
+- Automatic voice selection now skips the **legacy novelty voices** — Boing,
+  Bells, Bad News, Zarvox and the rest of the `com.apple.speech.synthesis.voice`
+  family, 19 of the 32 en-US voices. They sing and buzz rather than read, so a
+  `-n 10` page used to fill with them and say nothing about speech quality.
+  `--novelty` includes them again, and naming one in `--voices` always works.
+
+- Within a quality tier, voices are ranked by **family**: the Siri and compact
+  voices come before the legacy Eloquence engine. Without this, Samantha — the
+  voice most people recognise — was cut alphabetically from a ten-voice page
+  while six robotic Eloquence voices made it in. With ten players on a page,
+  what lands in the first five decides whether the comparison convinces.
+
 ## v3.1.0 — 2026-09-02
 
 ### Added

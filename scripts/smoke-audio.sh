@@ -23,6 +23,9 @@ run samples -o "$T/s.html"
 grep -q 'data:audio/mp4;base64,' "$T/s.html" || { echo "FAIL: samples page has no inline audio"; exit 1; }
 grep -qv 'src="http' "$T/s.html" || { echo "FAIL: samples page has external refs"; exit 1; }
 run samples --voices Samantha --text "one two three" --bitrate 96000 -o "$T/s2.html"
+run samples -n 4 --text "one two three" -o "$T/s4.html"
+[ "$(grep -c 'data:audio/mp4;base64,' "$T/s4.html")" = 4 ] || { echo "FAIL: -n 4 did not produce 4 players"; exit 1; }
+grep -q 'com.apple.speech.synthesis.voice' "$T/s4.html" && { echo "FAIL: novelty voice leaked into auto-selection"; exit 1; }
 expect 2 samples --bogus
 run talk -o "$T/clip.wav" "the quick brown fox jumps over the lazy dog"
 run info "$T/clip.wav"

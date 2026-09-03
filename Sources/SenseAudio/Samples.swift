@@ -35,7 +35,11 @@ private func samplesUsage() -> Never {
       -f, --file <path>     read the passage from a file
           --voices <list>   comma-separated voice names (default: best premium
                             and best default for your locale)
-          --lang <prefix>   pick the default pair for this language, e.g. en-GB
+          --lang <prefix>   pick voices for this language, e.g. en-GB
+      -n, --count <n>       how many voices to include (default 2: best premium
+                            and best default, which is the comparison that matters)
+          --all             every speech voice for the language
+          --novelty         also include the legacy fun voices (Boing, Bells…)
           --bitrate <bps>   AAC bitrate for the embedded audio (default 48000,
                             16000-64000; the synthesizer is mono 22.05 kHz)
           --open            open the page when it is written
@@ -54,15 +58,71 @@ private struct SampleOpts {
     var lang: String?
     var bitrate = 48000
     var open = false
+    var count = 2
+    var all = false
+    var novelty = false
 }
 
-/// Best premium/enhanced voice and best default voice for a language, so the
-/// page is an A/B rather than a list. Either may be missing.
-private func comparisonVoices(lang: String) -> [AVSpeechSynthesisVoice] {
-    let inLang = sortedVoices().filter { $0.language.lowercased().hasPrefix(lang.lowercased()) }
+/// macOS ships 19 legacy "fun" voices per locale — Boing, Bells, Bad News,
+/// Zarvox — that sing or buzz rather than read. They all live under one
+/// identifier prefix. Automatic selection skips them: they say nothing about
+/// speech quality and would crowd out the voices being compared. `--novelty`
+/// and an explicit `--voices` still reach them.
+private func isNovelty(_ v: AVSpeechSynthesisVoice) -> Bool {
+    v.identifier.hasPrefix("com.apple.speech.synthesis.voice.")
+}
+
+/// Within one quality tier, prefer the modern voice families. Eloquence is the
+/// legacy DECtalk-style engine — intelligible but robotic — so ranking it below
+/// the Siri and compact voices keeps a `-n 10` page from filling up with
+/// Grandma and Rocko while Samantha, the voice most people recognise, gets cut
+/// off alphabetically.
+private func familyRank(_ v: AVSpeechSynthesisVoice) -> Int {
+    let id = v.identifier
+    if id.hasPrefix("com.apple.voice.") || id.hasPrefix("com.apple.ttsbundle.") { return 3 }
+    if id.hasPrefix("com.apple.eloquence.") { return 2 }
+    return 1
+}
+
+/// Voices for a language: best quality first, then best family, then by name.
+private func voices(forLanguage lang: String, novelty: Bool = false) -> [AVSpeechSynthesisVoice] {
+    sortedVoices()
+        .filter { $0.language.lowercased().hasPrefix(lang.lowercased()) }
+        .filter { novelty || !isNovelty($0) }
+        .sorted {
+            if qualityRank($0.quality) != qualityRank($1.quality) {
+                return qualityRank($0.quality) > qualityRank($1.quality)
+            }
+            if familyRank($0) != familyRank($1) { return familyRank($0) > familyRank($1) }
+            return $0.name < $1.name
+        }
+}
+
+/// The default two: best premium/enhanced and best default, so the page is an
+/// A/B rather than a list. Either may be missing.
+private func comparisonVoices(lang: String, novelty: Bool = false) -> [AVSpeechSynthesisVoice] {
+    let inLang = voices(forLanguage: lang, novelty: novelty)
     let good = inLang.first { qualityRank($0.quality) >= 2 }
     let plain = inLang.first { qualityRank($0.quality) == 1 }
     return [good, plain].compactMap { $0 }
+}
+
+/// Top n for a language, keeping the best premium and best default in the set
+/// even if quality ordering alone would not reach the default one.
+private func topVoices(lang: String, count: Int, novelty: Bool = false) -> [AVSpeechSynthesisVoice] {
+    let inLang = voices(forLanguage: lang, novelty: novelty)
+    guard count < inLang.count else { return inLang }
+    var picked = comparisonVoices(lang: lang, novelty: novelty)
+    for v in inLang where picked.count < count {
+        if !picked.contains(where: { $0.identifier == v.identifier }) { picked.append(v) }
+    }
+    return picked.sorted {
+        if qualityRank($0.quality) != qualityRank($1.quality) {
+            return qualityRank($0.quality) > qualityRank($1.quality)
+        }
+        if familyRank($0) != familyRank($1) { return familyRank($0) > familyRank($1) }
+        return $0.name < $1.name
+    }
 }
 
 func cmdSamples(_ argv: [String]) {
@@ -77,6 +137,9 @@ func cmdSamples(_ argv: [String]) {
             $0.trimmingCharacters(in: .whitespaces)
         }
         case "--lang": o.lang = p.value(a)
+        case "-n", "--count": o.count = Int(p.doubleValue(a))
+        case "--all": o.all = true
+        case "--novelty": o.novelty = true
         case "--bitrate": o.bitrate = Int(p.doubleValue(a))
         case "--open": o.open = true
         case "-h", "--help": samplesUsage()
@@ -109,8 +172,11 @@ func cmdSamples(_ argv: [String]) {
     let lang = o.lang ?? currentLanguage()
     var voices: [AVSpeechSynthesisVoice]
     if o.voices.isEmpty {
-        voices = comparisonVoices(lang: lang)
-        if voices.isEmpty { voices = comparisonVoices(lang: String(lang.prefix(2))) }
+        let want = o.all ? Int.max : max(1, o.count)
+        voices = topVoices(lang: lang, count: want, novelty: o.novelty)
+        if voices.isEmpty {
+            voices = topVoices(lang: String(lang.prefix(2)), count: want, novelty: o.novelty)
+        }
         guard !voices.isEmpty else { fail("no voices installed for \(lang)") }
     } else {
         voices = o.voices.map { name in
