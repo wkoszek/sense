@@ -19,6 +19,11 @@ run voices --premium
 run voices --lang en --json
 run voices --quiet
 expect 2 voices --bogus
+run samples -o "$T/s.html"
+grep -q 'data:audio/mp4;base64,' "$T/s.html" || { echo "FAIL: samples page has no inline audio"; exit 1; }
+grep -qv 'src="http' "$T/s.html" || { echo "FAIL: samples page has external refs"; exit 1; }
+run samples --voices Samantha --text "one two three" --bitrate 96000 -o "$T/s2.html"
+expect 2 samples --bogus
 run talk -o "$T/clip.wav" "the quick brown fox jumps over the lazy dog"
 run info "$T/clip.wav"
 run info "$T/clip.wav" --json

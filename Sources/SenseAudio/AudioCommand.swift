@@ -12,6 +12,7 @@ func printUsage() {
       transcribe   speech-to-text: live mic, file, or stdin  [Speech.framework]
       talk, say    text-to-speech, best installed voice      [AVSpeechSynthesizer]
       voices       list voices; --install gets the premium ones (free, much better)
+      samples      self-contained HTML page comparing voices, audio inlined
 
     playback & inspection:
       play         play a file or stdin
@@ -44,6 +45,7 @@ public func runAudio(_ argv: [String]) -> Never {
     case "play": cmdPlay(rest)
     case "talk", "say", "tts": cmdTalk(rest)
     case "voices": cmdVoices(rest)
+    case "samples": cmdSamples(rest)
     case "devices": cmdDevices(rest)
     case "info": cmdInfo(rest)
     case "convert": cmdConvert(rest)

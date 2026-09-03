@@ -148,6 +148,7 @@ sense vision classify --model Model.mlpackage img.jpg
 | `split` | Audio splitting on silence boundaries |
 | `gain` | Gain adjustment and peak normalization (`--normalize`) |
 | `voices` | List installed TTS voices by quality; `--install` opens the System Settings pane where premium voices are downloaded |
+| `samples` | Synthesize one passage in several voices into a single self-contained HTML page with inline players — the fastest way to hear premium vs default |
 | `devices` | List audio input/output devices and test microphone levels (`--test`) |
 
 #### Audio Examples

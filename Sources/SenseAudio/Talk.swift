@@ -26,7 +26,7 @@ private func talkUsage() -> Never {
     exit(2)
 }
 
-private struct TalkOpts {
+struct TalkOpts {
     var voice: String?
     var output: String?
     var rate: Float = AVSpeechUtteranceDefaultSpeechRate
@@ -74,7 +74,7 @@ private final class Done: NSObject, AVSpeechSynthesizerDelegate {
     func speechSynthesizer(_ s: AVSpeechSynthesizer, didCancel u: AVSpeechUtterance) { finished = true }
 }
 
-private func makeUtterance(_ text: String, _ o: TalkOpts, _ voice: AVSpeechSynthesisVoice) -> AVSpeechUtterance {
+func makeUtterance(_ text: String, _ o: TalkOpts, _ voice: AVSpeechSynthesisVoice) -> AVSpeechUtterance {
     var u: AVSpeechUtterance
     if o.ssml {
         // Apple's SSML parser SIGSEGVs (macOS 15.7) on these tags; refuse up front.
@@ -109,7 +109,9 @@ private func speak(_ u: AVSpeechUtterance) {
     if !d.finished { synth.stopSpeaking(at: .immediate) }
 }
 
-private func render(_ u: AVSpeechUtterance, to path: String) {
+/// Synthesize to a file. Shared with `samples`, which needs an explicit
+/// bitrate so the base64 it embeds stays small.
+func render(_ u: AVSpeechUtterance, to path: String, bitrate: Int? = nil) {
     let out = OutputFile(path)
     let synth = AVSpeechSynthesizer()
     var file: AVAudioFile?
@@ -121,7 +123,7 @@ private func render(_ u: AVSpeechUtterance, to path: String) {
         if pcm.frameLength == 0 { finished = true; return }
         if file == nil {
             guard let settings = fileSettings(ext: out.writeExt, sampleRate: pcm.format.sampleRate,
-                                              channels: pcm.format.channelCount) else {
+                                              channels: pcm.format.channelCount, bitrate: bitrate) else {
                 writeErr = NSError(domain: programName, code: 1, userInfo: [
                     NSLocalizedDescriptionKey: "unsupported output extension .\(pathExt(path)) (use wav/caf/aiff/m4a/flac/mp3)",
                 ])

@@ -3,6 +3,31 @@
 Every release needs a section here **before** it is cut — `make release` reads
 it as the GitHub release body and refuses to run without one.
 
+## v3.1.0 — 2026-09-02
+
+### Added
+
+- **`sense audio samples`** — synthesize one passage in several voices and write
+  a single self-contained HTML page with the audio inlined as base64 data URIs.
+  No server, no sidecar files, no network: open it from disk and press play.
+
+  ```sh
+  sense audio samples --open          # best premium vs best default, side by side
+  sense audio samples --voices Ava,Zoe,Samantha --text "..."
+  ```
+
+  Defaults to a prosody-heavy passage — a question, an em-dash pause, a spoken
+  number — because premium voices pull away on intonation rather than on
+  individual sounds. About 200 KB for a two-voice page at the default 48 kbps.
+
+  `--output`, `--text`, `--file`, `--voices`, `--lang`, `--bitrate` and `--open`.
+  Bitrate is clamped to 16000-64000: the synthesizer emits mono 22.05 kHz and
+  AAC rejects anything outside that range with an unhelpful CoreAudio error.
+
+  Every generated page carries a note that Apple licenses the system voices for
+  personal, non-commercial use, and that the audio must not be published — which
+  is also why these samples are generated locally instead of hosted on the site.
+
 ## v3.0.0 — 2026-09-02
 
 ### Removed
