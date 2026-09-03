@@ -2,4 +2,4 @@
 /// `sense audio` all report it so a bug report names one number.
 ///
 /// Bumped by scripts/release.sh — do not edit by hand.
-public let senseVersion = "3.2.0"
+public let senseVersion = "3.2.1"
