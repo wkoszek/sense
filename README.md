@@ -2,6 +2,8 @@
 
 `sense` is a command-line tool for vision and audio processing on macOS built using native Apple frameworks (Vision, CoreImage, ImageIO, AVFoundation, ScreenCaptureKit, PDFKit, CoreML, Speech, and CoreAudio).
 
+Website: [sense.koszek.com](https://sense.koszek.com)
+
 All processing is executed on-device. The only exceptions are optional network transcription (`sense audio transcribe --allow-network`) and MP3 encoding, which uses `lame` or `ffmpeg` if available on `PATH`.
 
 ## Installation

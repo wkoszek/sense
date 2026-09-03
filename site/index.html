@@ -183,6 +183,7 @@
     min-width: 0; /* let long commands scroll inside instead of widening the grid */
   }
   .card h3 { font-size: 15px; font-weight: 600; }
+  .card .note { font-size: 13px; color: var(--muted); margin-top: -6px; }
   .card .cmd {
     display: flex; align-items: center; gap: 10px;
     min-width: 0;
@@ -388,8 +389,24 @@
 <section id="audio">
   <div class="wrap">
     <h2>Audio</h2>
-    <p class="lede">Record, transcribe, speak, convert, trim, split — with voice-activity detection and on-device speech recognition.</p>
+    <p class="lede">Record, transcribe, speak, convert, trim, split — with voice-activity detection and on-device speech recognition. Before your first <code>talk</code>: install the premium voices. They're a free download and sound dramatically better.</p>
     <div class="cards">
+      <div class="card">
+        <h3>Get the premium voices</h3>
+        <p class="note">Opens System Settings where the free premium voices are downloaded — a large quality jump for <span style="font-family: var(--mono); font-size: 12px;">talk</span>.</p>
+        <div class="cmd">
+          <pre><span class="prompt">$ </span>sense audio voices --install</pre>
+          <button class="copy small" data-cmd="sense audio voices --install">Copy</button>
+        </div>
+      </div>
+      <div class="card">
+        <h3>List installed voices, best first</h3>
+        <p class="note">Add <span style="font-family: var(--mono); font-size: 12px;">--premium</span> to see just the good ones.</p>
+        <div class="cmd">
+          <pre><span class="prompt">$ </span>sense audio voices</pre>
+          <button class="copy small" data-cmd="sense audio voices">Copy</button>
+        </div>
+      </div>
       <div class="card">
         <h3>Transcribe a recording, on device</h3>
         <div class="cmd">

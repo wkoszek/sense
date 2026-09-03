@@ -75,11 +75,13 @@ The surfaces, in the order they go stale:
 | GitHub + Gitea repo description and topics | the one-line blurb | when the scope of the tool changes |
 | [Profile README](https://github.com/wkoszek/wkoszek) | the `sense` bullet | when the one-line pitch changes |
 | `.github/repo.diaml` | `description`, `short_description`, `tags` | keep identical to the live repo topics |
-| Project website | install and feature pages | **none yet — see below** |
+| [sense.koszek.com](https://sense.koszek.com) (`site/index.html`) | hero install line, example commands, premium-voices tip | every user-visible change |
 
-There is no `sense` website today; `koszek.com/sense` is a 404. When one exists,
-add it to this table and treat it as non-optional: a released feature nobody can
-read about has not really shipped. Until then, the README is the website.
+The website is a single self-contained `site/index.html`, deployed to GitHub
+Pages by `.github/workflows/pages.yml` on every push to `main` that touches
+`site/` (pushes reach GitHub via the Gitea mirror). DNS lives in
+`../infra/dns/yaml/koszek.com.yaml` (`sense` CNAME → `wkoszek.github.io`).
+Every command shown on the site must be real — same rule as the README.
 
 Two things make this concrete rather than aspirational:
 
