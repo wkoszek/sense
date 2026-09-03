@@ -3,6 +3,31 @@
 Every release needs a section here **before** it is cut — `make release` reads
 it as the GitHub release body and refuses to run without one.
 
+## v3.2.1 — 2026-09-03
+
+### Fixed
+
+- **`sense audio transcribe` from the microphone always failed with "microphone
+  access denied", even after clicking Allow.**
+
+  `transcribe` re-execs itself with TCC responsibility disclaimed, which is what
+  lets an unbundled CLI answer the Speech Recognition prompt. But macOS will not
+  store a *Microphone* grant for a bare executable path: every microphone and
+  camera row in the TCC database belongs to a real app bundle, and there is no
+  `client_type=1` row for either service — while Speech Recognition does get one.
+  So the disclaimed binary showed the dialog, the click was accepted, nothing
+  persisted, and `AVCaptureDevice.requestAccess` returned false on every run.
+
+  Live capture now stays attributed to the terminal, which is a bundle and can
+  hold a microphone grant. File and stdin input — which need Speech but never
+  the microphone — still disclaim as before.
+
+  One consequence: the Speech Recognition prompt for live capture is now
+  attributed to your terminal rather than to `sense`, so you may be asked once
+  more. A terminal that cannot host that prompt will fail where the disclaimed
+  binary would have succeeded; if you hit that, transcribe a recorded file
+  instead (`sense audio record -o note.wav --vad 2 && sense audio transcribe note.wav`).
+
 ## v3.2.0 — 2026-09-02
 
 ### Added

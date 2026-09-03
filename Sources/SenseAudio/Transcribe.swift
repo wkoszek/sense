@@ -50,7 +50,19 @@ func cmdTranscribe(_ args: [String]) {
     }
     guard o.engine == "apple" else { fail("engine '\(o.engine)' not implemented (only 'apple' for now)") }
 
-    reexecDisclaimedIfNeeded()
+    // Disclaiming makes this binary its own TCC subject, which is what lets an
+    // unbundled CLI answer the Speech Recognition prompt. But TCC will not
+    // store a *Microphone* grant for a bare path — every microphone and camera
+    // entry in the database belongs to a real app bundle, and there is no
+    // client_type=1 row for either service. So a disclaimed `sense` shows the
+    // mic dialog, the user clicks Allow, nothing persists, and requestAccess
+    // returns false forever.
+    //
+    // Live capture therefore stays attributed to the terminal, which is a
+    // bundle and can hold a mic grant. Only the file and stdin paths — which
+    // need Speech but never the microphone — disclaim.
+    let usesMicrophone = o.input == nil
+    if !usesMicrophone { reexecDisclaimedIfNeeded() }
     ensureSpeechAccess()
     let localeID = o.lang ?? Locale.current.identifier.replacingOccurrences(of: "_", with: "-")
     guard let rec = SFSpeechRecognizer(locale: Locale(identifier: localeID)) else {

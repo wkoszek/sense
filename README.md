@@ -179,6 +179,10 @@ sense audio gain in.wav out.wav --normalize --db -3
 - Permissions for microphone, speech recognition, camera, and screen recording are managed under the bundle ID `com.koszek.sense`.
 - `make build` signs the binary with Developer ID credentials so TCC permissions persist across builds.
 - Run `sense vision doctor --request` to prompt for camera and screen recording permissions.
+- Permissions for an unbundled CLI are keyed to the **executable path**, not the
+  code signature, so each `brew upgrade` installs to a new Cellar path and macOS
+  asks again. Live microphone capture is attributed to your terminal, because
+  macOS only stores microphone grants for real app bundles.
 
 ### Audio Processing
 - Decodes formats supported by CoreAudio (WAV, AIFF, CAF, M4A, AAC, ALAC, FLAC, MP3).
