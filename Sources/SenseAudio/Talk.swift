@@ -19,7 +19,6 @@ private func talkUsage() -> Never {
           --ssml                          treat input as raw SSML (<speak>...</speak>);
                                           .ssml/.xml files imply this
           --dump-ssml                     print the generated SSML instead of speaking
-      -l, --list-voices                   list installed voices (see `sense audio voices`)
 
     Premium voices sound dramatically better and are a free download:
       sense audio voices --install
@@ -32,7 +31,6 @@ private struct TalkOpts {
     var output: String?
     var rate: Float = AVSpeechUtteranceDefaultSpeechRate
     var pitch: Float = 1.0
-    var listVoices = false
     var markdown = false
     var ssml = false
     var dumpSSML = false
@@ -160,7 +158,8 @@ func cmdTalk(_ args: [String]) {
         case "-m", "--markdown": o.markdown = true
         case "--ssml": o.ssml = true
         case "--dump-ssml": o.dumpSSML = true
-        case "-l", "--list-voices": o.listVoices = true
+        case "-l", "--list-voices":
+            fail("`talk -l` was removed in v3.0.0 — use `sense audio voices`", code: 2)
         case "-h", "--help": talkUsage()
         case "--": while let rest = p.next() { o.text.append(rest) }
         default:
@@ -168,8 +167,6 @@ func cmdTalk(_ args: [String]) {
             o.text.append(a)
         }
     }
-
-    if o.listVoices { cmdVoices([]); return }
 
     var text = o.text.joined(separator: " ")
     if let f = o.file {

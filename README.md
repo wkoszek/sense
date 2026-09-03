@@ -138,7 +138,7 @@ sense vision classify --model Model.mlpackage img.jpg
 |---|---|
 | `record` | Audio recording from microphone to WAV/M4A with VAD silence detection (`--vad`) or live metering |
 | `transcribe` | On-device speech recognition via `SFSpeechRecognizer` (live mic or audio file, optional `--srt` output) |
-| `talk`, `say` | Text-to-speech synthesis via `AVSpeechSynthesizer` (supports Markdown or SSML input) |
+| `talk`, `say` | Text-to-speech synthesis via `AVSpeechSynthesizer` (supports Markdown or SSML input; see `voices` to list or install voices) |
 | `play` | Audio playback via `AVAudioPlayer` |
 | `info` | Audio file metadata inspection and silence detection (`--silences`) |
 | `convert` | Format conversion and resampling via `AVAudioConverter` |

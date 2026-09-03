@@ -13,7 +13,7 @@ expect() { want=$1; shift; set +e; "$V" audio "$@" >/dev/null 2>&1; got=$?; set 
 
 run version
 run devices
-run talk -l
+expect 2 talk -l          # removed in v3.0.0, must fail with a pointer
 run voices
 run voices --premium
 run voices --lang en --json

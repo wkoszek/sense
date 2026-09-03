@@ -3,6 +3,19 @@
 Every release needs a section here **before** it is cut — `make release` reads
 it as the GitHub release body and refuses to run without one.
 
+## v3.0.0 — 2026-09-02
+
+### Removed
+
+- **`sense audio talk -l` / `--list-voices`.** Use `sense audio voices`, which
+  does the same thing plus filtering, JSON, and `--install`. Passing the old
+  flag now exits 2 with a message naming the replacement rather than dumping
+  usage, so the break is self-explaining.
+
+  A removed flag is a breaking change to the CLI surface, so this is a major
+  version even though it is a small edit — the rule is worth more than the
+  number.
+
 ## v2.1.0 — 2026-09-02
 
 ### Added
